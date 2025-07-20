@@ -44,45 +44,36 @@
     const video = document.getElementById('videoPlayer');
     const botoesDiv = document.getElementById('botoes');
 
-    async function tocar(urlOriginal) {
-      const url = decodeURIComponent(urlOriginal).trim();
-      const tentativas = url.endsWith('.ts')
-        ? [url.replace(/\.ts($|\?)/, '.m3u8$1'), url]
-        : url.endsWith('.m3u8')
-          ? [url, url.replace(/\.m3u8($|\?)/, '.ts$1')]
-          : [url];
+    function tocar(urlOriginal) {
+      const urlProxy = `https://ts-producao.netlify.app/.netlify/functions/proxy?url=${encodeURIComponent(urlOriginal)}`;
 
-      for (const urlTentar of tentativas) {
-        try {
-          const res = await fetch(urlTentar, { redirect: 'follow' });
-          if (!res.ok) continue;
-          const ct = res.headers.get('content-type') || '';
-          const finalUrl = res.url;
-
-          if (/mpegurl/.test(ct) || finalUrl.endsWith('.m3u8')) {
-            if (!Hls.isSupported()) {
-              alert('Navegador sem suporte HLS');
-              return;
-            }
-            window.hls?.destroy();
-            window.hls = new Hls();
-            window.hls.loadSource(finalUrl);
-            window.hls.attachMedia(video);
-            window.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-            return;
-          }
-
-          if (ct.includes('video')) {
-            window.hls?.destroy?.();
-            video.src = finalUrl;
-            video.play();
-            return;
-          }
-        } catch {
-          // continua tentando
+      if (Hls.isSupported()) {
+        if (window.hls) {
+          window.hls.destroy();
         }
+
+        const hls = new Hls();
+
+        // Reescreve URLs dos fragmentos TS para passarem pelo proxy também
+        hls.on(Hls.Events.FRAG_LOADING, function (event, data) {
+          const original = data.frag.url;
+          data.frag.url = `https://ts-producao.netlify.app/.netlify/functions/proxy?url=${encodeURIComponent(original)}`;
+        });
+
+        hls.loadSource(urlProxy);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play();
+        });
+
+        window.hls = hls;
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // fallback nativo para Safari/iOS
+        video.src = urlProxy;
+        video.play();
+      } else {
+        alert('Seu navegador não suporta HLS.');
       }
-      alert('Não foi possível reproduzir esse canal.');
     }
 
     // Carregar e parsear a lista M3U do GitHub
@@ -97,8 +88,7 @@
             if (url && url.startsWith('http')) {
               const btn = document.createElement('button');
               btn.textContent = nome;
-              const urlComProxy = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(url);
-              btn.onclick = () => tocar(urlComProxy);
+              btn.onclick = () => tocar(url);
               botoesDiv.appendChild(btn);
             }
           }
