@@ -43,32 +43,33 @@
   <script>
     const video = document.getElementById('videoPlayer');
     const botoesDiv = document.getElementById('botoes');
+    let hls = null;
 
     function tocar(urlOriginal) {
-      const urlProxy = `https://ts-producao.netlify.app/.netlify/functions/proxy?url=${encodeURIComponent(urlOriginal)}`;
+      // Proxy da Netlify para contornar CORS e mixed content
+      const urlProxy = `/.netlify/functions/proxy?url=${encodeURIComponent(urlOriginal)}`;
 
       if (Hls.isSupported()) {
-        if (window.hls) {
-          window.hls.destroy();
+        if (hls) {
+          hls.destroy();
+          hls = null;
         }
 
-        const hls = new Hls();
+        hls = new Hls();
 
-        // Reescreve URLs dos fragmentos TS para passarem pelo proxy também
-        hls.on(Hls.Events.FRAG_LOADING, function (event, data) {
+        // Intercepta fragmentos .ts para passar pelo proxy também
+        hls.on(Hls.Events.FRAG_LOADING, function(event, data) {
           const original = data.frag.url;
-          data.frag.url = `https://ts-producao.netlify.app/.netlify/functions/proxy?url=${encodeURIComponent(original)}`;
+          if (!original.startsWith('/.netlify/functions/proxy')) {
+            data.frag.url = `/.netlify/functions/proxy?url=${encodeURIComponent(original)}`;
+          }
         });
 
         hls.loadSource(urlProxy);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.play();
-        });
-
-        window.hls = hls;
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // fallback nativo para Safari/iOS
+        // Fallback Safari/iOS
         video.src = urlProxy;
         video.play();
       } else {
@@ -76,7 +77,7 @@
       }
     }
 
-    // Carregar e parsear a lista M3U do GitHub
+    // Carrega lista M3U pública do GitHub (substitua pela sua)
     fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
       .then(res => res.text())
       .then(texto => {
