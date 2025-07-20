@@ -66,27 +66,29 @@
     const botoesDiv = document.getElementById('botoes');
 
   // Carregar e parsear a lista M3U do GitHub
-  fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
-    .then(res => res.text())
-    .then(texto => {
-      const linhas = texto.split('\n');
-      for (let i = 0; i < linhas.length; i++) {
-        if (linhas[i].startsWith('#EXTINF')) {
-          const nome = linhas[i].split(',')[1]?.trim() || 'Sem nome';
-          const url = linhas[i + 1]?.trim();
-          if (url && url.startsWith('http')) {
-            const btn = document.createElement('button');
-            btn.textContent = nome;
+  // Carregar e parsear a lista M3U do GitHub
+fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
+  .then(res => res.text())
+  .then(texto => {
+    const linhas = texto.split('\n');
+    for (let i = 0; i < linhas.length; i++) {
+      if (linhas[i].startsWith('#EXTINF')) {
+        const nome = linhas[i].split(',')[1]?.trim() || 'Sem nome';
+        const url = linhas[i + 1]?.trim();
+        if (url && url.startsWith('http')) {
+          const btn = document.createElement('button');
+          btn.textContent = nome;
 
-            // ⬇️ Usa o proxy seguro
-            const urlComProxy = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(url);
-            btn.onclick = () => tocar(urlComProxy);
+          // ⬇️ Usa o proxy seguro
+          const urlComProxy = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(url);
+          btn.onclick = () => tocar(urlComProxy);
 
-            botoesDiv.appendChild(btn);
-          }
+          botoesDiv.appendChild(btn);
         }
       }
-    });
+    }
+  });
+
   </script>
 
 </body>
