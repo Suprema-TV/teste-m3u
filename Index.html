@@ -62,8 +62,8 @@
       alert('Não foi possível reproduzir esse canal.');
     }
 
-    // Carregar e parsear a lista M3U do GitHub
-    fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/refs/heads/main/lista-teste.m3u')
+    // Carregar e parsear a lista M3U do GitHub (corrigido o caminho)
+    fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
       .then(res => res.text())
       .then(texto => {
         const linhas = texto.split('\n');
