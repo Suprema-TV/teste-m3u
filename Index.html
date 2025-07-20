@@ -61,8 +61,9 @@
       }
       alert('Não foi possível reproduzir esse canal.');
     }
-<script>
-  const botoesDiv = document.getElementById('botoes');
+
+    // Carregar e parsear a lista M3U do GitHub (corrigido o caminho)
+    const botoesDiv = document.getElementById('botoes');
 
   // Carregar e parsear a lista M3U do GitHub
   fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
@@ -86,7 +87,7 @@
         }
       }
     });
-</script>
+  </script>
 
 </body>
 </html>
