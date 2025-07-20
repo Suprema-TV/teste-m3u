@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teste Simplificado Canais AMC</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body { background: #111; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    video { width: 90%; max-width: 800px; margin: 20px auto; display: block; border-radius: 8px; background: black; }
+    button { background: #ff4747; border: none; padding: 10px 20px; margin: 6px; color: white; cursor: pointer; border-radius: 6px; }
+    button:hover { background: #e63e3e; }
+  </style>
+</head>
+<body>
+
+  <h1>Teste Canais AMC - Simplificado</h1>
+  <div id="botoes"></div>
+  <video id="videoPlayer" controls autoplay muted></video>
+
+  <script>
+    const video = document.getElementById('videoPlayer');
+    const botoesDiv = document.getElementById('botoes');
+
+    // Função que toca vídeo (igual do seu painel)
+    async function tocar(urlOriginal) {
+      const url = decodeURIComponent(urlOriginal).trim();
+      const tentativas = url.endsWith('.ts')
+        ? [url.replace(/\.ts($|\?)/, '.m3u8$1'), url]
+        : url.endsWith('.m3u8')
+          ? [url, url.replace(/\.m3u8($|\?)/, '.ts$1')]
+          : [url];
+
+      for (const urlTentar of tentativas) {
+        try {
+          const res = await fetch(urlTentar, { redirect: 'follow' });
+          if (!res.ok) continue;
+          const ct = res.headers.get('content-type') || '';
+          const finalUrl = res.url;
+
+          if (/mpegurl/.test(ct) || finalUrl.endsWith('.m3u8')) {
+            if (!Hls.isSupported()) {
+              alert('Navegador sem suporte HLS');
+              return;
+            }
+            window.hls?.destroy();
+            window.hls = new Hls();
+            window.hls.loadSource(finalUrl);
+            window.hls.attachMedia(video);
+            window.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            return;
+          }
+
+          if (ct.includes('video')) {
+            window.hls?.destroy?.();
+            video.src = finalUrl;
+            video.play();
+            return;
+          }
+        } catch {
+          // continua tentando
+        }
+      }
+      alert('Não foi possível reproduzir esse canal.');
+    }
+
+    // Carregar e parsear a lista M3U simples
+    fetch('lista-teste.m3u')
+      .then(res => res.text())
+      .then(texto => {
+        const linhas = texto.split('\n');
+        for(let i = 0; i < linhas.length; i++) {
+          if (linhas[i].startsWith('#EXTINF')) {
+            const nome = linhas[i].split(',')[1]?.trim() || 'Sem nome';
+            const url = linhas[i+1]?.trim();
+            if (url && url.startsWith('http')) {
+              const btn = document.createElement('button');
+              btn.textContent = nome;
+              btn.onclick = () => tocar(encodeURIComponent(url));
+              botoesDiv.appendChild(btn);
+            }
+          }
+        }
+      });
+  </script>
+
+</body>
+</html>

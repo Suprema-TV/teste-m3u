@@ -1,0 +1,13 @@
+#EXTM3U
+
+#EXTINF:-1 tvg-name="AMC FHD" tvg-logo="http://linux404.pro/static/logos/canais/amc.png" group-title="Canais | Filmes e Séries",AMC FHD
+http://linux404.pro:80/hhXWaEXwG/8Rs7uB/71768.ts
+
+#EXTINF:-1 tvg-name="AMC FHD [H265]" tvg-logo="http://linux404.pro/static/logos/canais/amc.png" group-title="Canais | Filmes e Séries",AMC FHD [H265]
+http://linux404.pro:80/hhXWaEXwG/8Rs7uB/71769.ts
+
+#EXTINF:-1 tvg-name="AMC HD" tvg-logo="http://linux404.pro/static/logos/canais/amc.png" group-title="Canais | Filmes e Séries",AMC HD
+http://linux404.pro:80/hhXWaEXwG/8Rs7uB/71770.ts
+
+#EXTINF:-1 tvg-name="AMC SD" tvg-logo="http://linux404.pro/static/logos/canais/amc.png" group-title="Canais | Filmes e Séries",AMC SD
+http://linux404.pro:80/hhXWaEXwG/8Rs7uB/71771.ts
