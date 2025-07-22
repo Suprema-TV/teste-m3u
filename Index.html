@@ -79,7 +79,7 @@
             btn.textContent = nome;
 
             // ⬇️ Usa o proxy seguro
-            const urlComProxy = "https://ts-producao.netlify.app/.nehttps://proxy-streaming.suprematvinformatica.workers.dev/tlify/functions/proxy?url=" + encodeURIComponent(url);
+            const urlComProxy = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(url);
             btn.onclick = () => tocar(urlComProxy);
 
             botoesDiv.appendChild(btn);
