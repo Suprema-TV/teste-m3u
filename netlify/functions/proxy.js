@@ -8,22 +8,20 @@ export default async (req, context) => {
   req.headers.forEach((v, k) => (forwardedHeaders[k] = v));
 
   const upstream = await fetch(target, { headers: forwardedHeaders });
-  
-  // Clona todos os headers de resposta
-  const resHdr = new Headers(upstream.headers);
-  
-  // Força CORS
-  resHdr.set("Access-Control-Allow-Origin", "*");
-  resHdr.set("Access-Control-Allow-Headers", "*");
-  resHdr.set("Access-Control-Expose-Headers", "*");
+  const resHdr = {};
+  upstream.headers.forEach((v, k) => (resHdr[k] = v));
 
-  // Trata playlist M3U8
+  // Força CORS
+  resHdr["Access-Control-Allow-Origin"] = "*";
+  resHdr["Access-Control-Allow-Headers"] = "*";
+
+  /* ------------ SE FOR PLAYLIST M3U8, REESCREVE ------------ */
   const isPlaylist =
-    (resHdr.get("content-type") || "").includes("application/vnd.apple.mpegurl") ||
+    (resHdr["content-type"] || "").includes("application/vnd.apple.mpegurl") ||
     target.toLowerCase().endsWith(".m3u8");
 
   if (isPlaylist) {
-    const text = await upstream.text();
+    const text = await upstream.text();               // lê a playlist
     const base = target.substring(0, target.lastIndexOf("/") + 1);
 
     const rewritten = text
@@ -31,16 +29,23 @@ export default async (req, context) => {
       .map((line) => {
         line = line.trim();
         if (line === "" || line.startsWith("#")) return line;
-        const abs = new URL(line, base).toString();
-        return "/.netlify/functions/proxy?url=" + encodeURIComponent(abs);
+
+// trata também sub-playlists
+const fullUrl = new URL(line, base).toString();
+return "/.netlify/functions/proxy?url=" + encodeURIComponent(fullUrl);
+
+        const abs = new URL(line, base).toString();          // URL absoluta
+        return (
+          "/.netlify/functions/proxy?url=" + encodeURIComponent(abs)
+        );                                                   // passa no proxy
       })
       .join("\n");
 
-    resHdr.set("content-type", "application/vnd.apple.mpegurl");
+    resHdr["content-type"] = "application/vnd.apple.mpegurl";
     return new Response(rewritten, { status: 200, headers: resHdr });
   }
 
-  // Caso não seja playlist, retorna o corpo direto (ex: .ts, .mp4)
+  /* ------------ NÃO É PLAYLIST: SÓ REPASSA O STREAM ------------ */
   return new Response(upstream.body, {
     status: upstream.status,
     headers: resHdr,
