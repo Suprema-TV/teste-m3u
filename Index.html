@@ -36,7 +36,7 @@
 </head>
 <body>
 
-  <h1>Teste Canais AMC - Simplificado</h1>
+  <h1>Teste Canais AMC - via Cloudflare Proxy</h1>
   <div id="botoes"></div>
   <video id="videoPlayer" controls autoplay muted></video>
 
@@ -44,8 +44,9 @@
     const video = document.getElementById('videoPlayer');
     const botoesDiv = document.getElementById('botoes');
 
+    const PROXY_BASE = "https://proxy-streaming.suprematvinformatica.workers.dev/?url=";
+
     async function tocar(urlOriginal) {
-      // urlOriginal já vem com proxy, então vamos carregar direto
       if (!urlOriginal) {
         alert('URL inválida');
         return;
@@ -56,16 +57,15 @@
         return;
       }
 
-      // Se hls.js suportado, usa ele, senão tenta player nativo Safari
       if (Hls.isSupported()) {
         window.hls?.destroy();
 
         const hls = new Hls();
 
-        // Faz com que os fragmentos TS também passem pelo proxy
+        // Redireciona cada fragmento .ts também via proxy
         hls.on(Hls.Events.FRAG_LOADING, (event, data) => {
           const original = data.frag.url;
-          data.frag.url = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(original);
+          data.frag.url = PROXY_BASE + encodeURIComponent(original);
         });
 
         hls.loadSource(urlOriginal);
@@ -74,14 +74,13 @@
 
         window.hls = hls;
       } else {
-        // Safari / iOS fallback
         video.src = urlOriginal;
         video.play();
       }
     }
 
-    // Pega a lista M3U do GitHub e cria botões com proxy no Netlify Functions
-    fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
+    // Pega a lista via Cloudflare Worker
+    fetch(PROXY_BASE + encodeURIComponent('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u'))
       .then(res => res.text())
       .then(texto => {
         const linhas = texto.split('\n');
@@ -92,8 +91,9 @@
             if (url && url.startsWith('http')) {
               const btn = document.createElement('button');
               btn.textContent = nome;
-              // Passa a url do canal pelo proxy Netlify Functions para evitar CORS
-              const urlComProxy = "https://ts-producao.netlify.app/.netlify/functions/proxy?url=" + encodeURIComponent(url);
+
+              // Proxy também para a URL do canal
+              const urlComProxy = PROXY_BASE + encodeURIComponent(url);
               btn.onclick = () => tocar(urlComProxy);
               botoesDiv.appendChild(btn);
             }
