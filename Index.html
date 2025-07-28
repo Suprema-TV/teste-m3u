@@ -86,7 +86,7 @@
     }
 
     // Carregar e parsear a lista M3U do GitHub
-    fetch('https://playplussdr-lh.akamaihd.net/i/pp_sdr@377858/master.m3u8')
+    fetch('https://raw.githubusercontent.com/Suprema-TV/teste-m3u/main/lista-teste.m3u')
       .then(res => res.text())
       .then(texto => {
         const linhas = texto.split('\n');
