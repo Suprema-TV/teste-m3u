@@ -6,15 +6,40 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+    #linkGerado {
+      width: 100%;
+      padding: 8px;
+      font-size: 1rem;
+      margin-top: 10px;
+      user-select: all;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <h2>Login de Teste</h2>
   <form id="formLogin">
-    <input type="email" id="email" placeholder="E-mail" required /><br />
-    <input type="password" id="senha" placeholder="Senha" required /><br />
+    <input type="email" id="email" placeholder="E-mail" required /><br /><br />
+    <input type="password" id="senha" placeholder="Senha" required /><br /><br />
     <button type="submit">Entrar</button>
   </form>
   <p><button id="btnRegister">Cadastrar</button></p>
+
+  <div id="resultado" style="display:none;">
+    <p>Link gerado para uso no app IPTV:</p>
+    <input type="text" id="linkGerado" readonly />
+    <button id="btnCopiar">Copiar link</button>
+  </div>
 
   <script>
     // Config Firebase
@@ -32,7 +57,6 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Gerar Token
     function gerarToken(uid) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
@@ -53,8 +77,10 @@
       auth.signInWithEmailAndPassword(email, senha)
         .then(({ user }) => gerarToken(user.uid))
         .then(token => {
-          alert("Use este link no IPTV Smarters ou TiviMate:\n" +
-            `https://SEUSITE.netlify.app/api/lista?t=${token}`);
+          // Mostrar o link e botão copiar
+          const url = `https://SEUSITE.netlify.app/api/lista?t=${token}`;
+          document.getElementById('linkGerado').value = url;
+          document.getElementById('resultado').style.display = 'block';
         })
         .catch(err => alert("Erro: " + err.message));
     });
@@ -63,11 +89,20 @@
     document.getElementById('btnRegister').addEventListener('click', () => {
       const email = prompt("E-mail:");
       const senha = prompt("Senha:");
-      if (!email || !senha) return;
+      if (!email || !senha) return alert('Preencha ambos os campos!');
 
       auth.createUserWithEmailAndPassword(email, senha)
         .then(() => alert("Usuário criado! Faça login."))
         .catch(err => alert("Erro: " + err.message));
+    });
+
+    // Botão copiar
+    document.getElementById('btnCopiar').addEventListener('click', () => {
+      const input = document.getElementById('linkGerado');
+      input.select();
+      input.setSelectionRange(0, 99999); // Para dispositivos móveis
+      document.execCommand('copy');
+      alert('Link copiado para a área de transferência!');
     });
   </script>
 </body>
