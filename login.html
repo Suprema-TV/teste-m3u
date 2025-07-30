@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Teste Login Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h2>Login de Teste</h2>
+  <form id="formLogin">
+    <input type="email" id="email" placeholder="E-mail" required /><br />
+    <input type="password" id="senha" placeholder="Senha" required /><br />
+    <button type="submit">Entrar</button>
+  </form>
+  <p><button id="btnRegister">Cadastrar</button></p>
+
+  <script>
+    // Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDaQ_y2-nrn3Ab02t7E29vSEUE49yeNpbk",
+      authDomain: "login-581de.firebaseapp.com",
+      databaseURL: "https://login-581de-default-rtdb.firebaseio.com",
+      projectId: "login-581de",
+      storageBucket: "login-581de.appspot.com",
+      messagingSenderId: "215781501800",
+      appId: "1:215781501800:web:ff7eb5e4dd4621673b84dd"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // Gerar Token
+    function gerarToken(uid) {
+      const token = Math.random().toString(36).slice(2, 10);
+      const expira = new Date();
+      expira.setHours(expira.getHours() + 24); // 24h
+
+      return database.ref(`tokens/${token}`).set({
+        uid,
+        expira: expira.toISOString()
+      }).then(() => token);
+    }
+
+    // Login
+    document.getElementById('formLogin').addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(({ user }) => gerarToken(user.uid))
+        .then(token => {
+          alert("Use este link no IPTV Smarters ou TiviMate:\n" +
+            `https://SEUSITE.netlify.app/api/lista?t=${token}`);
+        })
+        .catch(err => alert("Erro: " + err.message));
+    });
+
+    // Cadastro
+    document.getElementById('btnRegister').addEventListener('click', () => {
+      const email = prompt("E-mail:");
+      const senha = prompt("Senha:");
+      if (!email || !senha) return;
+
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then(() => alert("Usuário criado! Faça login."))
+        .catch(err => alert("Erro: " + err.message));
+    });
+  </script>
+</body>
+</html>
