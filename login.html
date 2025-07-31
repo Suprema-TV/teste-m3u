@@ -69,22 +69,25 @@
     }
 
     // Login
-    document.getElementById('formLogin').addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('senha').value;
+document.getElementById('formLogin').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
 
-      auth.signInWithEmailAndPassword(email, senha)
-        .then(({ user }) => gerarToken(user.uid))
-        .then(() => {
-          alert("Login realizado com sucesso! Token gerado.");
-          // redirecionar ou limpar formulário, se desejar
-        })
-        .catch(err => {
-          console.error("Erro no login:", err);
-          alert("Erro: " + err.message);
-        });
+  auth.signInWithEmailAndPassword(email, senha)
+    .then(({ user }) => gerarToken(user.uid).then(token => {
+      const url = `https://ts-producao.netlify.app/login?token=${token}`;
+      alert("Token gerado com sucesso!\n\nURL para cliente:\n" + url);
+      // Se quiser também exibir na tela em vez de alert:
+      const output = document.createElement('p');
+      output.innerHTML = `<strong>URL do cliente:</strong><br><input type="text" value="${url}" readonly style="width:100%;" onclick="this.select()">`;
+      document.querySelector('.card').appendChild(output);
+    }))
+    .catch(err => {
+      console.error("Erro no login:", err);
+      alert("Erro: " + err.message);
     });
+});
 
     // Cadastro
     document.getElementById('btnRegister').addEventListener('click', () => {
