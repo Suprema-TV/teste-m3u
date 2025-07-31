@@ -78,7 +78,8 @@
         .then(({ user }) => gerarToken(user.uid))
         .then(token => {
           // 👉 Agora o link vai usar o Cloudflare Worker
-          const url = `https://SEUWORKER.workers.dev/lista?t=${token}`;
+          const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
+
           
           document.getElementById('linkGerado').value = url;
           document.getElementById('resultado').style.display = 'block';
