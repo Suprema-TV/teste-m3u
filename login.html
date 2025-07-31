@@ -27,6 +27,11 @@
       border-radius: 8px;
       box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
     }
+    input[type="text"] {
+      width: 100%;
+      margin-top: 10px;
+      padding: 6px;
+    }
   </style>
 </head>
 <body>
@@ -41,7 +46,6 @@
   </div>
 
   <script>
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDaQ_y2-nrn3Ab02t7E29vSEUE49yeNpbk",
       authDomain: "login-581de.firebaseapp.com",
@@ -52,44 +56,42 @@
       appId: "1:215781501800:web:ff7eb5e4dd4621673b84dd"
     };
     firebase.initializeApp(firebaseConfig);
-
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Função para gerar e salvar token
     function gerarToken(uid) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
-      expira.setHours(expira.getHours() + 24); // validade 24h
+      expira.setHours(expira.getHours() + 24);
 
       return database.ref(`tokens/${token}`).set({
         uid,
         expira: expira.toISOString()
-      });
+      }).then(() => token);
     }
 
-    // Login
-document.getElementById('formLogin').addEventListener('submit', e => {
-  e.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const senha = document.getElementById('senha').value;
+    document.getElementById('formLogin').addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
 
-  auth.signInWithEmailAndPassword(email, senha)
-    .then(({ user }) => gerarToken(user.uid).then(token => {
-      const url = `https://ts-producao.netlify.app/login?token=${token}`;
-      alert("Token gerado com sucesso!\n\nURL para cliente:\n" + url);
-      // Se quiser também exibir na tela em vez de alert:
-      const output = document.createElement('p');
-      output.innerHTML = `<strong>URL do cliente:</strong><br><input type="text" value="${url}" readonly style="width:100%;" onclick="this.select()">`;
-      document.querySelector('.card').appendChild(output);
-    }))
-    .catch(err => {
-      console.error("Erro no login:", err);
-      alert("Erro: " + err.message);
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(({ user }) =>
+          gerarToken(user.uid).then(token => {
+            const url = `https://ts-producao.netlify.app/login?token=${token}`;
+            alert("Token gerado com sucesso!");
+
+            const output = document.createElement('p');
+            output.innerHTML = `<strong>URL do cliente:</strong><br><input type="text" value="${url}" readonly onclick="this.select()">`;
+            document.querySelector('.card').appendChild(output);
+          })
+        )
+        .catch(err => {
+          console.error("Erro no login:", err);
+          alert("Erro: " + err.message);
+        });
     });
-});
 
-    // Cadastro
     document.getElementById('btnRegister').addEventListener('click', () => {
       const email = prompt("E-mail:");
       const senha = prompt("Senha:");
