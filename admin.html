@@ -5,6 +5,42 @@
   <title>Admin Tokens</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      max-width: 600px;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      background: #f5f5f5;
+      margin-bottom: 10px;
+      padding: 12px 15px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #d9534f;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    button:hover {
+      background-color: #c9302c;
+    }
+  </style>
 </head>
 <body>
   <h2>Tokens ativos</h2>
@@ -21,18 +57,33 @@
     const database = firebase.database();
 
     const lista = document.getElementById('lista');
-    database.ref('tokens').on('value', snap => {
+
+    // Atualiza a lista de tokens em tempo real
+    database.ref('tokens').on('value', snapshot => {
       lista.innerHTML = "";
-      snap.forEach(item => {
+      if (!snapshot.exists()) {
+        lista.innerHTML = "<li>Nenhum token ativo no momento.</li>";
+        return;
+      }
+      snapshot.forEach(item => {
+        const token = item.key;
+        const data = item.val();
+        const expira = new Date(data.expira).toLocaleString('pt-BR');
+
         const li = document.createElement('li');
-        li.innerHTML = `${item.key} - expira em: ${item.val().expira} 
-          <button onclick="remover('${item.key}')">Remover</button>`;
+        li.innerHTML = `
+          <span><strong>${token}</strong> - expira em: ${expira}</span>
+          <button onclick="remover('${token}')">Remover</button>
+        `;
         lista.appendChild(li);
       });
     });
 
     function remover(token) {
-      database.ref('tokens/' + token).remove();
+      if (confirm(`Deseja remover o token: ${token}?`)) {
+        database.ref('tokens/' + token).remove()
+          .catch(err => alert("Erro ao remover token: " + err.message));
+      }
     }
   </script>
 </body>
