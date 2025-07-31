@@ -13,13 +13,6 @@
       margin: 30px;
       background: #f7f7f7;
     }
-    #linkGerado {
-      width: 100%;
-      padding: 8px;
-      font-size: 1rem;
-      margin-top: 10px;
-      user-select: all;
-    }
     button {
       margin-top: 10px;
       padding: 8px 12px;
@@ -45,12 +38,6 @@
       <button type="submit">Entrar</button>
     </form>
     <p><button id="btnRegister">Cadastrar</button></p>
-
-    <div id="resultado" style="display:none;">
-      <p>Link gerado para uso no app IPTV:</p>
-      <input type="text" id="linkGerado" readonly />
-      <button id="btnCopiar">Copiar link</button>
-    </div>
   </div>
 
   <script>
@@ -69,18 +56,16 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Função para gerar e salvar token no Firebase
+    // Função para gerar e salvar token
     function gerarToken(uid) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
       expira.setHours(expira.getHours() + 24); // validade 24h
 
-      console.log("Gerando token:", token, "para UID:", uid);
-
       return database.ref(`tokens/${token}`).set({
         uid,
         expira: expira.toISOString()
-      }).then(() => token);
+      });
     }
 
     // Login
@@ -90,15 +75,10 @@
       const senha = document.getElementById('senha').value;
 
       auth.signInWithEmailAndPassword(email, senha)
-        .then(({ user }) => {
-          console.log("Login bem sucedido para:", user.uid);
-          return gerarToken(user.uid);
-        })
-        .then(token => {
-          const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
-          document.getElementById('linkGerado').value = url;
-          document.getElementById('resultado').style.display = 'block';
-          console.log("Token salvo e link gerado:", url);
+        .then(({ user }) => gerarToken(user.uid))
+        .then(() => {
+          alert("Login realizado com sucesso! Token gerado.");
+          // redirecionar ou limpar formulário, se desejar
         })
         .catch(err => {
           console.error("Erro no login:", err);
@@ -118,15 +98,6 @@
           console.error("Erro no cadastro:", err);
           alert("Erro: " + err.message);
         });
-    });
-
-    // Botão copiar
-    document.getElementById('btnCopiar').addEventListener('click', () => {
-      const input = document.getElementById('linkGerado');
-      input.select();
-      input.setSelectionRange(0, 99999);
-      document.execCommand('copy');
-      alert('Link copiado!');
     });
   </script>
 </body>
