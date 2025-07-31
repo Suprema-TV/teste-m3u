@@ -9,7 +9,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 30px;
-      max-width: 600px;
+      max-width: 800px;
     }
     h2 {
       margin-bottom: 20px;
@@ -20,13 +20,14 @@
     }
     li {
       background: #f5f5f5;
-      margin-bottom: 10px;
-      padding: 12px 15px;
-      border-radius: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 6px;
       font-size: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .token-info {
+      margin-bottom: 10px;
     }
     button {
       background-color: #d9534f;
@@ -36,9 +37,23 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 0.9rem;
+      margin-right: 5px;
     }
     button:hover {
       background-color: #c9302c;
+    }
+    .copy-button {
+      background-color: #5bc0de;
+    }
+    .copy-button:hover {
+      background-color: #31b0d5;
+    }
+    small {
+      color: #555;
+    }
+    a {
+      word-break: break-all;
+      color: #337ab7;
     }
   </style>
 </head>
@@ -55,7 +70,6 @@
     };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-
     const lista = document.getElementById('lista');
 
     // Atualiza a lista de tokens em tempo real
@@ -65,23 +79,47 @@
         lista.innerHTML = "<li>Nenhum token ativo no momento.</li>";
         return;
       }
+
       snapshot.forEach(item => {
         const token = item.key;
         const data = item.val();
         const expira = new Date(data.expira).toLocaleString('pt-BR');
+        const link = data.link || "Não informado";
+        const deviceId = data.deviceId || "Desconhecido";
+        const email = data.email || "Desconhecido";
+        const userAgent = data.userAgent || "N/A";
 
         const li = document.createElement('li');
         li.innerHTML = `
-          <span><strong>${token}</strong> - expira em: ${expira}</span>
+          <div class="token-info">
+            <strong>Token:</strong> ${token}<br/>
+            <strong>Email:</strong> ${email}<br/>
+            <strong>Expira em:</strong> ${expira}<br/>
+            <strong>Device ID:</strong> <small>${deviceId}</small><br/>
+            <strong>Link:</strong> <a href="${link}" target="_blank">${link}</a><br/>
+            <strong>User Agent:</strong> <small>${userAgent}</small>
+          </div>
+          <button onclick="copiarLink('${link}')"
+                  class="copy-button">Copiar Link</button>
           <button onclick="remover('${token}')">Remover</button>
         `;
         lista.appendChild(li);
       });
     });
 
+    // Função para copiar link
+    function copiarLink(link) {
+      navigator.clipboard.writeText(link).then(() => {
+        alert("Link copiado!");
+      }).catch(err => {
+        alert("Erro ao copiar: " + err);
+      });
+    }
+
+    // Função para remover token
     function remover(token) {
       if (confirm(`Deseja remover o token: ${token}?`)) {
-        database.ref('tokens/' + token).remove()
+        firebase.database().ref('tokens/' + token).remove()
           .catch(err => alert("Erro ao remover token: " + err.message));
       }
     }
