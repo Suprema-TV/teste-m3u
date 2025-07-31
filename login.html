@@ -60,7 +60,7 @@
     function gerarToken(uid) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
-      expira.setHours(expira.getHours() + 24); // 24h
+      expira.setHours(expira.getHours() + 24); // 24h validade
 
       return database.ref(`tokens/${token}`).set({
         uid,
@@ -77,8 +77,8 @@
       auth.signInWithEmailAndPassword(email, senha)
         .then(({ user }) => gerarToken(user.uid))
         .then(token => {
-          // Mostrar o link e botão copiar
-          const url = `https://SEUSITE.netlify.app/api/lista?t=${token}`;
+          // Atualize o domínio para seu domínio real
+          const url = `https://ts-producao.netlify.app/api/lista?t=${token}`;
           document.getElementById('linkGerado').value = url;
           document.getElementById('resultado').style.display = 'block';
         })
