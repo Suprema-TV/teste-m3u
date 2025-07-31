@@ -78,7 +78,8 @@
         .then(({ user }) => gerarToken(user.uid))
         .then(token => {
           // Atualize o domínio para seu domínio real
-          const url = `https://ts-producao.netlify.app/api/lista?t=${token}`;
+          const url = `https://ts-producao.netlify.app/.netlify/functions/lista?t=${token}`;
+
           document.getElementById('linkGerado').value = url;
           document.getElementById('resultado').style.display = 'block';
         })
