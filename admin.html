@@ -9,7 +9,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 30px;
-      max-width: 600px;
+      max-width: 700px;
     }
     h2 {
       margin-bottom: 20px;
@@ -28,17 +28,24 @@
       align-items: center;
       font-size: 1rem;
     }
+    .info {
+      flex-grow: 1;
+    }
     button {
-      background-color: #d9534f;
+      background-color: #007bff;
       border: none;
       color: white;
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      margin-left: 5px;
+    }
+    button.remover {
+      background-color: #d9534f;
     }
     button:hover {
-      background-color: #c9302c;
+      opacity: 0.85;
     }
   </style>
 </head>
@@ -55,10 +62,8 @@
     };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-
     const lista = document.getElementById('lista');
 
-    // Atualiza a lista de tokens em tempo real
     database.ref('tokens').on('value', snapshot => {
       lista.innerHTML = "";
       if (!snapshot.exists()) {
@@ -69,11 +74,19 @@
         const token = item.key;
         const data = item.val();
         const expira = new Date(data.expira).toLocaleString('pt-BR');
+        const autorizado = data.dispositivo || "Não autorizado";
 
         const li = document.createElement('li');
         li.innerHTML = `
-          <span><strong>${token}</strong> - expira em: ${expira}</span>
-          <button onclick="remover('${token}')">Remover</button>
+          <div class="info">
+            <strong>${token}</strong><br>
+            Expira em: ${expira}<br>
+            Dispositivo: <span>${autorizado}</span>
+          </div>
+          <div>
+            <button onclick="autorizar('${token}')">Autorizar</button>
+            <button class="remover" onclick="remover('${token}')">Remover</button>
+          </div>
         `;
         lista.appendChild(li);
       });
@@ -83,6 +96,15 @@
       if (confirm(`Deseja remover o token: ${token}?`)) {
         database.ref('tokens/' + token).remove()
           .catch(err => alert("Erro ao remover token: " + err.message));
+      }
+    }
+
+    function autorizar(token) {
+      const dispositivo = prompt("Informe o nome ou ID do dispositivo a autorizar:");
+      if (dispositivo && dispositivo.trim() !== "") {
+        database.ref('tokens/' + token).update({
+          dispositivo: dispositivo.trim()
+        }).catch(err => alert("Erro ao autorizar dispositivo: " + err.message));
       }
     }
   </script>
