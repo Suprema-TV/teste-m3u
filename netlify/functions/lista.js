@@ -25,6 +25,7 @@ export async function handler(event, context) {
     // URL original do provedor
     const urlOriginal = `http://fcbt627.cc/get.php?username=SEUUSER&password=SEUPASS&type=m3u_plus&output=ts`;
 
+
     // Proxy transparente
     const resp = await fetch(urlOriginal, {
       headers: {
