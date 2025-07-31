@@ -13,6 +13,13 @@
       margin: 30px;
       background: #f7f7f7;
     }
+    #linkGerado {
+      width: 100%;
+      padding: 8px;
+      font-size: 1rem;
+      margin-top: 10px;
+      user-select: all;
+    }
     button {
       margin-top: 10px;
       padding: 8px 12px;
@@ -27,11 +34,6 @@
       border-radius: 8px;
       box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
     }
-    input[type="text"] {
-      width: 100%;
-      margin-top: 10px;
-      padding: 6px;
-    }
   </style>
 </head>
 <body>
@@ -43,9 +45,16 @@
       <button type="submit">Entrar</button>
     </form>
     <p><button id="btnRegister">Cadastrar</button></p>
+
+    <div id="resultado" style="display:none;">
+      <p>Link gerado para uso no app IPTV:</p>
+      <input type="text" id="linkGerado" readonly />
+      <button id="btnCopiar">Copiar link</button>
+    </div>
   </div>
 
   <script>
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDaQ_y2-nrn3Ab02t7E29vSEUE49yeNpbk",
       authDomain: "login-581de.firebaseapp.com",
@@ -56,13 +65,17 @@
       appId: "1:215781501800:web:ff7eb5e4dd4621673b84dd"
     };
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const database = firebase.database();
 
+    // Função para gerar e salvar token no Firebase
     function gerarToken(uid) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
-      expira.setHours(expira.getHours() + 24);
+      expira.setHours(expira.getHours() + 24); // validade 24h
+
+      console.log("Gerando token:", token, "para UID:", uid);
 
       return database.ref(`tokens/${token}`).set({
         uid,
@@ -70,28 +83,30 @@
       }).then(() => token);
     }
 
+    // Login
     document.getElementById('formLogin').addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
 
       auth.signInWithEmailAndPassword(email, senha)
-        .then(({ user }) =>
-          gerarToken(user.uid).then(token => {
-            const url = `https://ts-producao.netlify.app/login?token=${token}`;
-            alert("Token gerado com sucesso!");
-
-            const output = document.createElement('p');
-            output.innerHTML = `<strong>URL do cliente:</strong><br><input type="text" value="${url}" readonly onclick="this.select()">`;
-            document.querySelector('.card').appendChild(output);
-          })
-        )
+        .then(({ user }) => {
+          console.log("Login bem sucedido para:", user.uid);
+          return gerarToken(user.uid);
+        })
+        .then(token => {
+          const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
+          document.getElementById('linkGerado').value = url;
+          document.getElementById('resultado').style.display = 'block';
+          console.log("Token salvo e link gerado:", url);
+        })
         .catch(err => {
           console.error("Erro no login:", err);
           alert("Erro: " + err.message);
         });
     });
 
+    // Cadastro
     document.getElementById('btnRegister').addEventListener('click', () => {
       const email = prompt("E-mail:");
       const senha = prompt("Senha:");
@@ -104,6 +119,16 @@
           alert("Erro: " + err.message);
         });
     });
+
+    // Botão copiar
+    document.getElementById('btnCopiar').addEventListener('click', () => {
+      const input = document.getElementById('linkGerado');
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Link copiado!');
+    });
   </script>
 </body>
 </html>
+
