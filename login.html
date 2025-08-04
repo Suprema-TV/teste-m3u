@@ -13,13 +13,6 @@
       margin: 30px;
       background: #f7f7f7;
     }
-    #linkGerado {
-      width: 100%;
-      padding: 8px;
-      font-size: 1rem;
-      margin-top: 10px;
-      user-select: all;
-    }
     button {
       margin-top: 10px;
       padding: 8px 12px;
@@ -34,6 +27,18 @@
       border-radius: 8px;
       box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
     }
+    #mensagemFinal {
+      background: #e6ffed;
+      border: 1px solid #a3e4b7;
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 5px;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+    #linkGerado {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -47,14 +52,14 @@
     <p><button id="btnRegister">Cadastrar</button></p>
 
     <div id="resultado" style="display:none;">
-      <p>Link gerado para uso no app IPTV:</p>
       <input type="text" id="linkGerado" readonly />
-      <button id="btnCopiar">Copiar link</button>
+      <div id="mensagemFinal">
+        ✅ Token gerado com sucesso! Agora abra o aplicativo IPTV para assistir.
+      </div>
     </div>
   </div>
 
   <script>
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDaQ_y2-nrn3Ab02t7E29vSEUE49yeNpbk",
       authDomain: "login-581de.firebaseapp.com",
@@ -69,14 +74,12 @@
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Função para gerar token e salvar no Firebase
     function gerarToken(uid, email) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
-      expira.setHours(expira.getHours() + 24); // validade 24h
+      expira.setHours(expira.getHours() + 24);
       const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
 
-      // Não salvar deviceId nem userAgent aqui
       return database.ref(`tokens/${token}`).set({
         uid,
         email,
@@ -85,21 +88,17 @@
       }).then(() => token);
     }
 
-    // Login
     document.getElementById('formLogin').addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
 
       auth.signInWithEmailAndPassword(email, senha)
-        .then(({ user }) => {
-          return gerarToken(user.uid, email);
-        })
+        .then(({ user }) => gerarToken(user.uid, email))
         .then(token => {
           const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
-          document.getElementById('linkGerado').value = url;
+          document.getElementById('linkGerado').value = url; // oculto
           document.getElementById('resultado').style.display = 'block';
-          console.log("Token e URL gerados com sucesso:", url);
         })
         .catch(err => {
           console.error("Erro no login:", err);
@@ -107,7 +106,6 @@
         });
     });
 
-    // Cadastro
     document.getElementById('btnRegister').addEventListener('click', () => {
       const email = prompt("E-mail:");
       const senha = prompt("Senha:");
@@ -119,15 +117,6 @@
           console.error("Erro no cadastro:", err);
           alert("Erro: " + err.message);
         });
-    });
-
-    // Copiar link
-    document.getElementById('btnCopiar').addEventListener('click', () => {
-      const input = document.getElementById('linkGerado');
-      input.select();
-      input.setSelectionRange(0, 99999);
-      document.execCommand('copy');
-      alert('Link copiado!');
     });
   </script>
 </body>
