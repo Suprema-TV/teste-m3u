@@ -117,11 +117,30 @@
     }
 
     function habilitarEdicao(token) {
-      document.getElementById(`email-${token}`).disabled = false;
-      document.getElementById(`expira-${token}`).disabled = false;
-      document.getElementById(`device-${token}`).disabled = false;
-      document.getElementById(`ua-${token}`).disabled = false;
-    }
+  document.getElementById(`email-${token}`).disabled = false;
+  document.getElementById(`expira-${token}`).disabled = false;
+  document.getElementById(`device-${token}`).disabled = false;
+  document.getElementById(`ua-${token}`).disabled = false;
+
+  const extra = document.createElement("div");
+  extra.className = "mt-2";
+  extra.innerHTML = `
+    <small>Ajustar tempo:</small><br>
+    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 30)">+30 min</button>
+    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60)">+1 hora</button>
+    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60 * 24)">+1 dia</button>
+  `;
+
+  const inputExpira = document.getElementById(`expira-${token}`);
+  inputExpira.parentNode.insertBefore(extra, inputExpira.nextSibling);
+}
+function ajustarTempo(token, minutos) {
+  const input = document.getElementById(`expira-${token}`);
+  const atual = new Date(input.value);
+  const novaData = new Date(atual.getTime() + minutos * 60000);
+  input.value = novaData.toISOString();
+}
+
 
     function salvar(token) {
       const email = document.getElementById(`email-${token}`).value;
