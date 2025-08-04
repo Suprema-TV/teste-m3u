@@ -62,119 +62,138 @@
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAeTzG2CWZUVvSp3jsjOAf7GLKj-4ohAUo",
-      authDomain: "login-581de.firebaseapp.com",
-      databaseURL: "https://login-581de-default-rtdb.firebaseio.com",
-      projectId: "login-581de",
-      storageBucket: "login-581de.appspot.com",
-      messagingSenderId: "675247715505",
-      appId: "1:675247715505:web:5d31fdfe7e9c9ec64983a1"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAeTzG2CWZUVvSp3jsjOAf7GLKj-4ohAUo",
+    authDomain: "login-581de.firebaseapp.com",
+    databaseURL: "https://login-581de-default-rtdb.firebaseio.com",
+    projectId: "login-581de",
+    storageBucket: "login-581de.appspot.com",
+    messagingSenderId: "675247715505",
+    appId: "1:675247715505:web:5d31fdfe7e9c9ec64983a1"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    function atualizarLista(snapshot) {
-      const lista = document.getElementById("listaTokens");
-      lista.innerHTML = "";
+  function atualizarLista(snapshot) {
+    const lista = document.getElementById("listaTokens");
+    lista.innerHTML = "";
 
-      const tokens = snapshot.val();
-      if (!tokens) {
-        lista.innerHTML = "<p class='text-center'>Nenhum token encontrado.</p>";
-        return;
-      }
-
-      Object.entries(tokens).forEach(([token, data]) => {
-        const expira = new Date(data.expira);
-        const agora = new Date();
-        const expirado = expira < agora;
-        const diffMs = expira - agora;
-
-        const tempoRestante = expirado
-          ? "<span class='expirado'>⚠ Expirado</span>"
-          : `<span class="contador">⏳ ${Math.floor(diffMs / 60000)} min restantes</span>`;
-
-        const card = document.createElement("div");
-        card.className = "col-md-10 token-card";
-
-        card.innerHTML = `
-          <strong>Token:</strong> ${token}<br>
-          <strong>Email:</strong> <input id="email-${token}" value="${data.email || ''}" disabled><br>
-          <strong>Expira:</strong> <input id="expira-${token}" value="${data.expira}" disabled> ${tempoRestante}<br>
-          <strong>Device ID:</strong> <input id="device-${token}" value="${data.deviceId || ''}" disabled><br>
-          <strong>User Agent:</strong> <input id="ua-${token}" value="${data.userAgent || ''}" disabled><br>
-          <strong>Link:</strong> <a href="${data.link}" target="_blank">${data.link}</a><br>
-          <div class="mt-3">
-            <button class="btn btn-sm btn-warning me-2" onclick="habilitarEdicao('${token}')">✏️ Editar</button>
-            <button class="btn btn-sm btn-success me-2" onclick="salvar('${token}')">💾 Salvar</button>
-            <button class="btn btn-sm btn-custom me-2" onclick="copiar('${data.link}')">📋 Copiar Link</button>
-            <button class="btn btn-sm btn-danger" onclick="removerToken('${token}')">🗑 Remover</button>
-          </div>
-        `;
-        lista.appendChild(card);
-      });
+    const tokens = snapshot.val();
+    if (!tokens) {
+      lista.innerHTML = "<p class='text-center'>Nenhum token encontrado.</p>";
+      return;
     }
 
-    function habilitarEdicao(token) {
-  document.getElementById(`email-${token}`).disabled = false;
-  document.getElementById(`expira-${token}`).disabled = false;
-  document.getElementById(`device-${token}`).disabled = false;
-  document.getElementById(`ua-${token}`).disabled = false;
+    Object.entries(tokens).forEach(([token, data]) => {
+      const expira = new Date(data.expira);
+      const agora = new Date();
+      const expirado = expira < agora;
+      const diffMs = expira - agora;
 
-  const extra = document.createElement("div");
-  extra.className = "mt-2";
-  extra.innerHTML = `
-    <small>Ajustar tempo:</small><br>
-    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 30)">+30 min</button>
-    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60)">+1 hora</button>
-    <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60 * 24)">+1 dia</button>
-  `;
+      const tempoRestante = expirado
+        ? "<span class='expirado'>⚠ Expirado</span>"
+        : `<span class="contador">⏳ ${Math.floor(diffMs / 60000)} min restantes</span>`;
 
-  const inputExpira = document.getElementById(`expira-${token}`);
-  inputExpira.parentNode.insertBefore(extra, inputExpira.nextSibling);
-}
-function ajustarTempo(token, minutos) {
-  const input = document.getElementById(`expira-${token}`);
-  const atual = new Date(input.value);
-  const novaData = new Date(atual.getTime() + minutos * 60000);
-  input.value = novaData.toISOString();
-}
+      const card = document.createElement("div");
+      card.className = "col-md-10 token-card";
 
+      card.innerHTML = `
+        <strong>Token:</strong> ${token}<br>
+        <strong>Email:</strong> <input id="email-${token}" value="${data.email || ''}" disabled><br>
+        <strong>Expira:</strong>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <input type="date" id="data-${token}" disabled>
+          <input type="time" id="hora-${token}" disabled>
+        </div>
+        <small id="tempo-${token}">${tempoRestante}</small><br>
+        <strong>Device ID:</strong> <input id="device-${token}" value="${data.deviceId || ''}" disabled><br>
+        <strong>User Agent:</strong> <input id="ua-${token}" value="${data.userAgent || ''}" disabled><br>
+        <strong>Link:</strong> <a href="${data.link}" target="_blank">${data.link}</a><br>
+        <div class="mt-3">
+          <button class="btn btn-sm btn-warning me-2" onclick="habilitarEdicao('${token}')">✏️ Editar</button>
+          <button class="btn btn-sm btn-success me-2" onclick="salvar('${token}')">💾 Salvar</button>
+          <button class="btn btn-sm btn-custom me-2" onclick="copiar('${data.link}')">📋 Copiar Link</button>
+          <button class="btn btn-sm btn-danger" onclick="removerToken('${token}')">🗑 Remover</button>
+        </div>
+      `;
+      lista.appendChild(card);
 
-    function salvar(token) {
-      const email = document.getElementById(`email-${token}`).value;
-      const expira = document.getElementById(`expira-${token}`).value;
-      const deviceId = document.getElementById(`device-${token}`).value;
-      const userAgent = document.getElementById(`ua-${token}`).value;
+      // Preencher os campos de data/hora
+      setTimeout(() => {
+        const d = new Date(data.expira);
+        document.getElementById(`data-${token}`).value = d.toISOString().slice(0, 10);
+        document.getElementById(`hora-${token}`).value = d.toISOString().slice(11, 16);
+      }, 0);
+    });
+  }
 
-      db.ref("tokens/" + token).update({
-        email,
-        expira,
-        deviceId,
-        userAgent
-      }).then(() => {
-        alert("✅ Token atualizado!");
-      }).catch(err => {
-        console.error("Erro ao atualizar:", err);
-        alert("Erro ao salvar!");
-      });
+  function habilitarEdicao(token) {
+    document.getElementById(`email-${token}`).disabled = false;
+    document.getElementById(`data-${token}`).disabled = false;
+    document.getElementById(`hora-${token}`).disabled = false;
+    document.getElementById(`device-${token}`).disabled = false;
+    document.getElementById(`ua-${token}`).disabled = false;
+
+    const extra = document.createElement("div");
+    extra.className = "mt-2";
+    extra.innerHTML = `
+      <small>Ajustar tempo:</small><br>
+      <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 30)">+30 min</button>
+      <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60)">+1 hora</button>
+      <button class="btn btn-sm btn-outline-light me-1 mb-1" onclick="ajustarTempo('${token}', 60 * 24)">+1 dia</button>
+    `;
+
+    const inputData = document.getElementById(`data-${token}`);
+    inputData.parentNode.insertBefore(extra, inputData.nextSibling);
+  }
+
+  function ajustarTempo(token, minutos) {
+    const data = document.getElementById(`data-${token}`).value;
+    const hora = document.getElementById(`hora-${token}`).value;
+    const atual = new Date(`${data}T${hora}:00Z`);
+    const novaData = new Date(atual.getTime() + minutos * 60000);
+
+    document.getElementById(`data-${token}`).value = novaData.toISOString().slice(0, 10);
+    document.getElementById(`hora-${token}`).value = novaData.toISOString().slice(11, 16);
+  }
+
+  function salvar(token) {
+    const email = document.getElementById(`email-${token}`).value;
+    const data = document.getElementById(`data-${token}`).value;
+    const hora = document.getElementById(`hora-${token}`).value;
+    const expira = new Date(`${data}T${hora}:00Z`).toISOString();
+    const deviceId = document.getElementById(`device-${token}`).value;
+    const userAgent = document.getElementById(`ua-${token}`).value;
+
+    db.ref("tokens/" + token).update({
+      email,
+      expira,
+      deviceId,
+      userAgent
+    }).then(() => {
+      alert("✅ Token atualizado!");
+    }).catch(err => {
+      console.error("Erro ao atualizar:", err);
+      alert("Erro ao salvar!");
+    });
+  }
+
+  function copiar(texto) {
+    navigator.clipboard.writeText(texto).then(() => {
+      alert("Link copiado!");
+    });
+  }
+
+  function removerToken(token) {
+    if (confirm(`Deseja remover o token: ${token}?`)) {
+      db.ref("tokens/" + token).remove();
     }
+  }
 
-    function copiar(texto) {
-      navigator.clipboard.writeText(texto).then(() => {
-        alert("Link copiado!");
-      });
-    }
+  db.ref("tokens").on("value", atualizarLista);
+</script>
 
-    function removerToken(token) {
-      if (confirm(`Deseja remover o token: ${token}?`)) {
-        db.ref("tokens/" + token).remove();
-      }
-    }
-
-    db.ref("tokens").on("value", atualizarLista);
-  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
