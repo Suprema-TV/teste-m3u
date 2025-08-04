@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Painel de Tokens Ativos</title>
+  <title>Admin - Tokens Ativos</title>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -14,11 +14,10 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
       background: #121212;
       color: #eee;
     }
-    h1, h2 {
+    h1 {
       color: #00eaff;
     }
     .token-card {
@@ -44,13 +43,21 @@
       font-size: 0.9em;
       color: #ccc;
     }
+    input {
+      width: 100%;
+      background: #222;
+      border: 1px solid #444;
+      color: #eee;
+      border-radius: 4px;
+      padding: 5px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="container py-4">
-    <h1 class="text-center mb-4">🔐 Tokens Ativos - SupremaTV</h1>
-    <h6 class="text-center text-warning mb-4">⚠️ ATENÇÃO: *User-Agent e Device-ID são preenchidos apenas quando a URL é usada.</h6>
-
+    <h1 class="text-center mb-4">🔧 Admin - Tokens Ativos</h1>
+    <h6 class="text-center text-warning mb-4">⚠️ *User-Agent e Device-ID são preenchidos quando a URL é usada.</h6>
     <div id="listaTokens" class="row justify-content-center"></div>
   </div>
 
@@ -93,17 +100,45 @@
 
         card.innerHTML = `
           <strong>Token:</strong> ${token}<br>
-          <strong>Email:</strong> ${data.email}<br>
-          <strong>Expira:</strong> ${data.expira} ${tempoRestante}<br>
-          <strong>Device ID:</strong> ${data.deviceId || '—'}<br>
-          <strong>User Agent:</strong> ${data.userAgent || '—'}<br>
+          <strong>Email:</strong> <input id="email-${token}" value="${data.email || ''}" disabled><br>
+          <strong>Expira:</strong> <input id="expira-${token}" value="${data.expira}" disabled> ${tempoRestante}<br>
+          <strong>Device ID:</strong> <input id="device-${token}" value="${data.deviceId || ''}" disabled><br>
+          <strong>User Agent:</strong> <input id="ua-${token}" value="${data.userAgent || ''}" disabled><br>
           <strong>Link:</strong> <a href="${data.link}" target="_blank">${data.link}</a><br>
-          <div class="mt-2">
+          <div class="mt-3">
+            <button class="btn btn-sm btn-warning me-2" onclick="habilitarEdicao('${token}')">✏️ Editar</button>
+            <button class="btn btn-sm btn-success me-2" onclick="salvar('${token}')">💾 Salvar</button>
             <button class="btn btn-sm btn-custom me-2" onclick="copiar('${data.link}')">📋 Copiar Link</button>
             <button class="btn btn-sm btn-danger" onclick="removerToken('${token}')">🗑 Remover</button>
           </div>
         `;
         lista.appendChild(card);
+      });
+    }
+
+    function habilitarEdicao(token) {
+      document.getElementById(`email-${token}`).disabled = false;
+      document.getElementById(`expira-${token}`).disabled = false;
+      document.getElementById(`device-${token}`).disabled = false;
+      document.getElementById(`ua-${token}`).disabled = false;
+    }
+
+    function salvar(token) {
+      const email = document.getElementById(`email-${token}`).value;
+      const expira = document.getElementById(`expira-${token}`).value;
+      const deviceId = document.getElementById(`device-${token}`).value;
+      const userAgent = document.getElementById(`ua-${token}`).value;
+
+      db.ref("tokens/" + token).update({
+        email,
+        expira,
+        deviceId,
+        userAgent
+      }).then(() => {
+        alert("✅ Token atualizado!");
+      }).catch(err => {
+        console.error("Erro ao atualizar:", err);
+        alert("Erro ao salvar!");
       });
     }
 
@@ -115,14 +150,13 @@
 
     function removerToken(token) {
       if (confirm(`Deseja remover o token: ${token}?`)) {
-        firebase.database().ref("tokens/" + token).remove();
+        db.ref("tokens/" + token).remove();
       }
     }
 
     db.ref("tokens").on("value", atualizarLista);
   </script>
 
-  <!-- Bootstrap Bundle (JS para eventuais interações futuras) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
