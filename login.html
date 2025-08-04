@@ -74,10 +74,10 @@
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
       expira.setHours(expira.getHours() + 24); // validade 24h
-      const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
+      const url = https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token};
 
       // Não salvar deviceId nem userAgent aqui
-      return database.ref(`tokens/${token}`).set({
+      return database.ref(tokens/${token}).set({
         uid,
         email,
         link: url,
@@ -96,7 +96,7 @@
           return gerarToken(user.uid, email);
         })
         .then(token => {
-          const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
+          const url = https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token};
           document.getElementById('linkGerado').value = url;
           document.getElementById('resultado').style.display = 'block';
           console.log("Token e URL gerados com sucesso:", url);
@@ -131,4 +131,4 @@
     });
   </script>
 </body>
-</html>
+</html> 
