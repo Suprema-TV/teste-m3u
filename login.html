@@ -46,12 +46,14 @@
     </form>
     <p><button id="btnRegister">Cadastrar</button></p>
 
-    <div id="resultado" style="display:none;">
-      <p>Link gerado para uso no app IPTV:</p>
-      <input type="text" id="linkGerado" readonly />
-      <button id="btnCopiar">Copiar link</button>
-    </div>
-  </div>
+    <!-- Substitua a div #resultado existente por esta abaixo -->
+<div id="resultado" style="display:none;">
+  <p><strong>✅ Acesso gerado com sucesso!</strong></p>
+  <p>Agora basta abrir o app IPTV para assistir normalmente.</p>
+  <p>Se ainda não tem o app, <a href="https://seu-link-de-download.com" target="_blank">clique aqui para baixar</a>.</p>
+  <p style="font-size: 0.9em; color: gray;">*Guarde este acesso. Ele é válido por 24 horas a partir da geração.</p>
+</div>
+
 
   <script>
     // Configuração do Firebase
@@ -96,10 +98,12 @@
           return gerarToken(user.uid, email);
         })
         .then(token => {
-          const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
-          document.getElementById('linkGerado').value = url;
-          document.getElementById('resultado').style.display = 'block';
-          console.log("Token e URL gerados com sucesso:", url);
+  const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
+  // document.getElementById('linkGerado').value = url;
+  document.getElementById('resultado').style.display = 'block';
+  console.log("Token e URL gerados com sucesso:", url);
+});
+
         })
         .catch(err => {
           console.error("Erro no login:", err);
