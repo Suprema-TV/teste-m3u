@@ -34,11 +34,6 @@
       border-radius: 8px;
       box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
     }
-    #infoExtras {
-      font-size: 14px;
-      color: #555;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
@@ -55,12 +50,6 @@
       <p>Link gerado para uso no app IPTV:</p>
       <input type="text" id="linkGerado" readonly />
       <button id="btnCopiar">Copiar link</button>
-
-      <div id="infoExtras">
-        <p id="tempoRestante"></p>
-        <p><strong>Device ID:</strong> <span id="deviceIdText"></span></p>
-        <p><strong>User Agent:</strong> <span id="userAgentText"></span></p>
-      </div>
     </div>
   </div>
 
@@ -76,34 +65,24 @@
       appId: "1:215781501800:web:ff7eb5e4dd4621673b84dd"
     };
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const database = firebase.database();
 
-    // Gera ou recupera um Device ID persistente
-    function getDeviceId() {
-      let deviceId = localStorage.getItem('deviceId');
-      if (!deviceId) {
-        deviceId = 'dev-' + Math.random().toString(36).substr(2, 10);
-        localStorage.setItem('deviceId', deviceId);
-      }
-      return deviceId;
-    }
-
     // Função para gerar token e salvar no Firebase
-    function gerarToken(uid, email, deviceId, userAgent) {
+    function gerarToken(uid, email) {
       const token = Math.random().toString(36).slice(2, 10);
       const expira = new Date();
       expira.setHours(expira.getHours() + 24); // validade 24h
       const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
 
+      // Não salvar deviceId nem userAgent aqui
       return database.ref(`tokens/${token}`).set({
         uid,
         email,
         link: url,
-        expira: expira.toISOString(),
-        deviceId,
-        userAgent
-      }).then(() => ({ token, expira }));
+        expira: expira.toISOString()
+      }).then(() => token);
     }
 
     // Login
@@ -112,28 +91,14 @@
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
 
-      const userAgent = navigator.userAgent;
-      const deviceId = getDeviceId();
-
       auth.signInWithEmailAndPassword(email, senha)
         .then(({ user }) => {
-          return gerarToken(user.uid, email, deviceId, userAgent);
+          return gerarToken(user.uid, email);
         })
-        .then(({ token, expira }) => {
+        .then(token => {
           const url = `https://proxy-streaming.suprematvinformatica.workers.dev/lista?t=${token}`;
           document.getElementById('linkGerado').value = url;
           document.getElementById('resultado').style.display = 'block';
-          document.getElementById('deviceIdText').textContent = deviceId;
-          document.getElementById('userAgentText').textContent = userAgent;
-
-          // Tempo restante
-          const agora = new Date();
-          const tempoRestante = new Date(expira) - agora;
-          const horas = Math.floor(tempoRestante / (1000 * 60 * 60));
-          const minutos = Math.floor((tempoRestante / (1000 * 60)) % 60);
-          document.getElementById('tempoRestante').textContent =
-            `⏰ Expira em ${horas}h ${minutos}min`;
-
           console.log("Token e URL gerados com sucesso:", url);
         })
         .catch(err => {
